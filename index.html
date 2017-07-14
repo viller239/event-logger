@@ -1,1 +1,151 @@
-test
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Event logger</title>
+    <style>
+        #playground {
+            float: left;
+            padding: 15px;
+        }
+        #log_wrap {
+            float: left;
+            padding: 5px 15px;
+        }
+        button {
+            display: block;
+            margin: 0 auto 5px;
+        }
+        input[type=text],
+        textarea,
+        div[contenteditable=true]{
+            width: 250px;
+            padding: 8px 12px;
+            margin: 5px;
+            display: inline-block;
+            border: 1px solid gray;
+            font-size: 18px;
+            vertical-align: top;
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+<div id="playground">
+    <button onclick="javascript:window.log_data.innerHTML=window.LOG;">SHOW LOG</button>
+
+    <input id="input_text_1" type="text" value="input"/>
+    <input id="input_text_2" type="text" value=""/>
+    <br><br>
+    <textarea id="textarea_1">textarea</textarea>
+    <textarea id="textarea_2"></textarea>
+    <br><br>
+    <div id="contenteditable_1" contenteditable="true">contenteditable</div>
+    <div id="contenteditable_2" contenteditable="true"></div>
+    <br>
+    <div id="contenteditable_3" contenteditable="true"><div>contenteditable + div</div></div>
+    <div id="contenteditable_4" contenteditable="true"><div></div></div>
+    <br>
+    <div id="contenteditable_5" contenteditable="true"><p>contenteditable + p</p></div>
+    <div id="contenteditable_6" contenteditable="true"><p></p></div>
+    <br>
+    <div id="contenteditable_7" contenteditable="true">
+        invisible
+        spaces
+        <br>
+        and
+        line
+        breaks
+    </div>
+    <div id="contenteditable_8" contenteditable="true">
+        <div>invisible spaces</div>
+        <div>in divs</div>
+    </div>
+</div>
+<div id="log_wrap">
+    <pre id="log_data">there will be log</pre>
+</div>
+<script>
+    function sel() {
+        var s = null;
+        try {
+            s = document.getSelection().getRangeAt(0);
+            return [s.startOffset, s.endOffset];
+        } catch (e) {}
+        return [];
+    }
+
+    function text() {
+        var el = document.activeElement;
+        if (el && el !== document.body) {
+            var t = el.value === undefined ? el.innerText : el.value;
+            t = t || '';
+            return t && t.replace(/\r?\n/g, '\\n')
+        }
+    }
+
+    var eventIndex = 1;
+    window.LOG = '';
+    var pad5 = '     ';
+    var pad10 = pad5 + pad5;
+    var pad25 = pad10 + pad10 + pad5;
+    function log(eventName, fields, eventObject) {
+        var t = text();
+        var s = [
+            (eventIndex + '.' + pad5).substring(0, 5),
+            (eventName + pad25).substring(0, 25),
+            ((t ? '\'' + t + '\'' : '') + pad25).substring(0, 25),
+            (JSON.stringify(sel()) + pad10).substring(0, 10),
+            (fields ? JSON.stringify(fields) : '')
+        ].join('');
+        eventIndex += 1;
+        window.LOG += s + '\n';
+        console.log(s, eventObject);
+    }
+
+    function listen(name, fields, cap) {
+        cap = cap || false;
+        fields = fields || [];
+        document.addEventListener(name, function (event) {
+            if (name === 'keydown') {
+                console.log('_____', event.key);
+                eventIndex = 1;
+            }
+            var f;
+            if (fields.length) {
+                f = {};
+                fields.forEach(function (name) { f[name] = event[name]; });
+            }
+            log(name, f, event);
+        }, cap);
+    }
+
+    listen('keydown', ['keyCode', 'key', 'code']);
+    listen('keypress', ['charCode', 'keyCode', 'key', 'code']);
+    listen('keyup', ['keyCode', 'key', 'code']);
+
+    listen('input');
+
+    listen('paste');
+    listen('cut');
+
+    listen('selectionchange');
+
+    listen('compositionstart', ['data', 'locale']);
+    listen('compositionupdate', ['data', 'locale']);
+    listen('compositionend', ['data', 'locale']);
+
+    setTimeout(function () {
+        new MutationObserver(function (m) {
+            log('MutationObserver', null, m);
+        }).observe(document, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+        });
+    });
+</script>
+</body>
+</html>
