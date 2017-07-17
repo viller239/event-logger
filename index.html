@@ -143,6 +143,8 @@
     listen('compositionupdate', ['data', 'locale']);
     listen('compositionend', ['data', 'locale']);
 
+    listen('mousedown');
+
     setTimeout(function () {
         new MutationObserver(function (m) {
             log('MutationObserver', null, m);
