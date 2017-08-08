@@ -69,6 +69,12 @@
         <div>invisible spaces</div>
         <div>in divs</div>
     </div>
+    <select>
+        <option value="---">---</option>
+        <option value="aaa">aaa</option>
+        <option value="bbb">bbb</option>
+        <option value="ccc">ccc</option>
+    </select>
 </div>
 <div id="log_wrap">
     <pre id="log_data">there will be log</pre>
@@ -143,7 +149,8 @@
     listen('compositionupdate', ['data', 'locale']);
     listen('compositionend', ['data', 'locale']);
 
-    listen('mousedown');
+    listen('mousedown', ['button', 'buttons', 'which']);
+    listen('mouseup', ['button', 'buttons', 'which']);
 
     setTimeout(function () {
         new MutationObserver(function (m) {
